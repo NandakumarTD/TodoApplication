@@ -4,6 +4,8 @@ package com.nk.todoApp.TodoApplication.Controller;
 import com.nk.todoApp.TodoApplication.Service.TodoService;
 import com.nk.todoApp.TodoApplication.Utility.TodoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -24,50 +26,45 @@ public class TodoController {
     }
 
     @GetMapping("/getAllItems")
-    public List<TodoDTO> getAllTodoItems(){
-        return service.getAllTodos();
+    public ResponseEntity<List<TodoDTO>> getAllTodoItems(){
+        return new ResponseEntity<List<TodoDTO>>(service.getAllTodos(), HttpStatus.OK);
     }
 
     @GetMapping("/getItemById/{id}")
-    public List<TodoDTO> getItemByID(@PathVariable int id){
-        return service.getTodobyId(id);
-
+    public ResponseEntity<TodoDTO> getItemByID(@PathVariable long id){
+        return new ResponseEntity<TodoDTO>(service.getTodoById(id), HttpStatus.OK);
     }
+
 
     @GetMapping("/getItemByPriority/{priority}")
-    public List<TodoDTO> getItemByPriority(@PathVariable String priority){
-        return service.getTodoByPriority(priority);
+    public ResponseEntity<List<TodoDTO>> getItemByPriority(@PathVariable String priority){
+        return new ResponseEntity<List<TodoDTO>>(service.getTodoByPriority(priority), HttpStatus.OK);
     }
+
 
     @PostMapping("/addItem")
-    public void addTodoItem(@RequestBody List<TodoDTO> items){
+    public ResponseEntity<TodoDTO> addTodoItem(@RequestBody TodoDTO items){
         TodoDTO vo = new TodoDTO();
-        List<TodoDTO> li = new ArrayList<>();
-//        vo.setId(items.getId());
-        for(TodoDTO vo1 : items) {
-            vo = new TodoDTO();
-            vo.setTaskName(vo1.getTaskName());
-            vo.setPriority(vo1.getPriority());
-            vo.setTargetDate(vo1.getTargetDate());
-            li.add(vo);
-        }
-        service.addTodoItem(li);
+        service.saveTodoData(items);
+        return new ResponseEntity<TodoDTO>(items,HttpStatus.CREATED);
     }
 
-    @PutMapping("/updateItem/{id}")
-    public void updateTodoItemById(@PathVariable int id, @RequestBody TodoDTO item){
-        TodoDTO vo = new TodoDTO();
-            List<TodoDTO> li = new ArrayList<>();
-        vo.setTaskName(item.getTaskName());
-        vo.setPriority(item.getPriority());
-        vo.setTargetDate(item.getTargetDate());
-        li.add(vo);
-        service.updateTodoById(id,li);
+    @PutMapping("/updateItem")
+    public ResponseEntity<TodoDTO> updateTodoItemById(@RequestBody TodoDTO item){
+        service.updateTodo(item);
+        return new ResponseEntity<TodoDTO>(item,HttpStatus.OK);
     }
+
 
     @DeleteMapping("/deleteItem/{id}")
-    public void deleteItemById(@PathVariable int id){
-        service.deleteTodoById(id);
-
+    public ResponseEntity<String> deleteItemById(@PathVariable long id){
+        String status = service.deleteTodo(id);
+        if(status.equalsIgnoreCase("Deleted")){
+            return new ResponseEntity<String>("Todo Deleted",HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<String>("ID Not Found",HttpStatus.NOT_FOUND);
+        }
     }
+
 }
